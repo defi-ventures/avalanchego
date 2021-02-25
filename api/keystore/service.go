@@ -99,10 +99,8 @@ func (ks *Keystore) Initialize(log logging.Logger, dbManager manager.Manager) er
 func (ks *Keystore) initializeDB(manager manager.Manager) error {
 	currentDB := manager.Current()
 
-	currentUserDB := prefixdb.New(usersPrefix, currentDB)
-	currentBCDB := prefixdb.New(bcsPrefix, currentDB)
-	ks.userDB = currentUserDB
-	ks.bcDB = currentBCDB
+	ks.userDB = prefixdb.New(usersPrefix, currentDB)
+	ks.bcDB = prefixdb.New(bcsPrefix, currentDB)
 
 	previousDB, exists := manager.Last()
 	if !exists {
