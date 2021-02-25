@@ -8,12 +8,14 @@ import (
 	"path"
 	"testing"
 
+	"github.com/prometheus/client_golang/prometheus"
+
+	"github.com/stretchr/testify/assert"
+
 	"github.com/ava-labs/avalanchego/database/leveldb"
 	"github.com/ava-labs/avalanchego/database/memdb"
 	"github.com/ava-labs/avalanchego/database/prefixdb"
 	"github.com/ava-labs/avalanchego/version"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestNewSingleDB(t *testing.T) {
@@ -305,6 +307,7 @@ func TestNewManagerFromDBs(t *testing.T) {
 	}
 
 }
+
 func TestNewManagerFromNonUniqueDBs(t *testing.T) {
 	_, err := NewManagerFromDBs([]*SemanticDatabase{
 		{
