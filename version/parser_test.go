@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewDefaultVerssionParser(t *testing.T) {
+func TestNewDefaultVersionParser(t *testing.T) {
 	p := NewDefaultParser()
 
 	v, err := p.Parse("v1.2.3")

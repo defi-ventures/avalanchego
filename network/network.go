@@ -55,7 +55,7 @@ var (
 	errNetworkClosed = errors.New("network closed")
 	errPeerIsMyself  = errors.New("peer is myself")
 
-	minimumUnmaskedVersion = version.NewDefaultApplicationVersion(constants.PlatformName, 1, 1, 0)
+	minimumUnmaskedVersion = version.NewDefaultApplication(constants.PlatformName, 1, 1, 0)
 )
 
 func init() { rand.Seed(time.Now().UnixNano()) }
@@ -105,7 +105,7 @@ type network struct {
 	id                                 ids.ShortID
 	ip                                 utils.DynamicIPDesc
 	networkID                          uint32
-	version                            version.ApplicationVersion
+	version                            version.Application
 	parser                             version.ApplicationParser
 	listener                           net.Listener
 	dialer                             Dialer
@@ -187,7 +187,7 @@ func NewDefaultNetwork(
 	id ids.ShortID,
 	ip utils.DynamicIPDesc,
 	networkID uint32,
-	version version.ApplicationVersion,
+	version version.Application,
 	parser version.ApplicationParser,
 	listener net.Listener,
 	dialer Dialer,
@@ -255,7 +255,7 @@ func NewNetwork(
 	id ids.ShortID,
 	ip utils.DynamicIPDesc,
 	networkID uint32,
-	version version.ApplicationVersion,
+	version version.Application,
 	parser version.ApplicationParser,
 	listener net.Listener,
 	dialer Dialer,
@@ -914,7 +914,7 @@ func (n *network) gossip() {
 			if peer.connected.GetValue() &&
 				!ip.IsZero() &&
 				n.vdrs.Contains(peer.id) {
-				peerVersion := peer.versionStruct.GetValue().(version.ApplicationVersion)
+				peerVersion := peer.versionStruct.GetValue().(version.Application)
 				if !peerVersion.Before(minimumUnmaskedVersion) || time.Since(n.apricotPhase0Time) < 0 {
 					ips = append(ips, ip)
 				}
@@ -1161,7 +1161,7 @@ func (n *network) validatorIPs() []utils.IPDesc {
 	for _, peer := range n.peers {
 		ip := peer.getIP()
 		if peer.connected.GetValue() && !ip.IsZero() && n.vdrs.Contains(peer.id) {
-			peerVersion := peer.versionStruct.GetValue().(version.ApplicationVersion)
+			peerVersion := peer.versionStruct.GetValue().(version.Application)
 			if !peerVersion.Before(minimumUnmaskedVersion) || time.Since(n.apricotPhase0Time) < 0 {
 				ips = append(ips, ip)
 			}
@@ -1179,7 +1179,7 @@ func (n *network) connected(p *peer) {
 
 	p.connected.SetValue(true)
 
-	peerVersion := p.versionStruct.GetValue().(version.ApplicationVersion)
+	peerVersion := p.versionStruct.GetValue().(version.Application)
 
 	if n.hasMasked {
 		if peerVersion.Before(minimumUnmaskedVersion) {

@@ -64,7 +64,7 @@ func (p *parser) Parse(s string) (Version, error) {
 
 // ApplicationParser defines the interface of an ApplicationVersion parser
 type ApplicationParser interface {
-	Parse(string) (ApplicationVersion, error)
+	Parse(string) (Application, error)
 }
 
 type applicationParser struct {
@@ -88,7 +88,7 @@ func NewApplicationParser(appSeparator string, versionSeparator string) Applicat
 	}
 }
 
-func (p *applicationParser) Parse(s string) (ApplicationVersion, error) {
+func (p *applicationParser) Parse(s string) (Application, error) {
 	splitApp := strings.SplitN(s, p.appSeparator, 2)
 	if len(splitApp) != 2 {
 		return nil, fmt.Errorf("failed to parse %s as a version", s)
@@ -99,7 +99,7 @@ func (p *applicationParser) Parse(s string) (ApplicationVersion, error) {
 		return nil, err
 	}
 
-	return NewApplicationVersion(
+	return NewApplication(
 		splitApp[0],
 		p.appSeparator,
 		p.versionParser.versionSeparator,
