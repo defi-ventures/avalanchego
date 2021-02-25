@@ -19,7 +19,6 @@ import (
 	"github.com/ava-labs/avalanchego/database"
 	"github.com/ava-labs/avalanchego/database/encdb"
 	"github.com/ava-labs/avalanchego/database/manager"
-	dbManager "github.com/ava-labs/avalanchego/database/manager"
 	"github.com/ava-labs/avalanchego/database/prefixdb"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/snow/engine/common"
@@ -84,7 +83,7 @@ type Keystore struct {
 }
 
 // Initialize the keystore
-func (ks *Keystore) Initialize(log logging.Logger, dbManager dbManager.Manager) error {
+func (ks *Keystore) Initialize(log logging.Logger, dbManager manager.Manager) error {
 	c := linearcodec.New(reflectcodec.DefaultTagName, maxSliceLength)
 	manager := codec.NewManager(maxPackerSize)
 	if err := manager.RegisterCodec(codecVersion, c); err != nil {
@@ -97,7 +96,7 @@ func (ks *Keystore) Initialize(log logging.Logger, dbManager dbManager.Manager) 
 	return ks.initializeDB(dbManager)
 }
 
-func (ks *Keystore) initializeDB(manager dbManager.Manager) error {
+func (ks *Keystore) initializeDB(manager manager.Manager) error {
 	currentDB := manager.Current()
 
 	currentUserDB := prefixdb.New(usersPrefix, currentDB)
