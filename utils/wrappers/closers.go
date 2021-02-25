@@ -8,13 +8,14 @@ import (
 	"sync"
 )
 
-// Closer ...
+// Closer is a nice utility for closing a group of objects while reporting an
+// error if one occurs.
 type Closer struct {
-	closers []io.Closer
 	lock    sync.Mutex
+	closers []io.Closer
 }
 
-// Add ...
+// Add a new object to be closed.
 func (c *Closer) Add(closer io.Closer) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
