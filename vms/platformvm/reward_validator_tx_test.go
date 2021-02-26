@@ -7,11 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ava-labs/avalanchego/database/manager"
-
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ava-labs/avalanchego/chains"
+	"github.com/ava-labs/avalanchego/database/manager"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/snow/engine/common"
 	"github.com/ava-labs/avalanchego/snow/validators"

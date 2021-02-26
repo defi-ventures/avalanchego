@@ -8,13 +8,11 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/ava-labs/avalanchego/database/manager"
-	"github.com/ava-labs/avalanchego/version"
-
 	"google.golang.org/grpc"
 
 	"github.com/hashicorp/go-plugin"
 
+	"github.com/ava-labs/avalanchego/database/manager"
 	"github.com/ava-labs/avalanchego/database/rpcdb"
 	"github.com/ava-labs/avalanchego/database/rpcdb/rpcdbproto"
 	"github.com/ava-labs/avalanchego/ids"
@@ -23,6 +21,7 @@ import (
 	"github.com/ava-labs/avalanchego/snow/engine/snowman/block"
 	"github.com/ava-labs/avalanchego/utils/logging"
 	"github.com/ava-labs/avalanchego/utils/wrappers"
+	"github.com/ava-labs/avalanchego/version"
 	"github.com/ava-labs/avalanchego/vms/rpcchainvm/galiaslookup"
 	"github.com/ava-labs/avalanchego/vms/rpcchainvm/galiaslookup/galiaslookupproto"
 	"github.com/ava-labs/avalanchego/vms/rpcchainvm/ghttp"

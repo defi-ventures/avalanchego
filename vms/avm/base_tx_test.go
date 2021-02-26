@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/ava-labs/avalanchego/database/manager"
-
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/snow/engine/common"
 	"github.com/ava-labs/avalanchego/utils/crypto"
