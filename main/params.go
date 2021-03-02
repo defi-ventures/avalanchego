@@ -342,7 +342,7 @@ func setNodeConfig(v *viper.Viper) error {
 		}
 		Config.DB = dbManager
 	} else {
-		dbManager, err := manager.NewManagerFromDBs([]*manager.SemanticDatabase{
+		dbManager, err := manager.NewManagerFromDBs([]*manager.VersionedDatabase{
 			{
 				Database: memdb.New(),
 				Version:  dbVersion,

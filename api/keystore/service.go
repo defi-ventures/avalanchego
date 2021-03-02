@@ -102,7 +102,7 @@ func (ks *Keystore) initializeDB(manager manager.Manager) error {
 	ks.userDB = prefixdb.New(usersPrefix, currentDB)
 	ks.bcDB = prefixdb.New(bcsPrefix, currentDB)
 
-	previousDB, exists := manager.Last()
+	previousDB, exists := manager.Previous()
 	if !exists {
 		return nil
 	}
@@ -146,22 +146,7 @@ func (ks *Keystore) initializeDB(manager manager.Manager) error {
 
 		bcsBatch := currentUserBCDB.NewBatch()
 
-		if err := func() error {
-			iterator := previousUserBCDB.NewIterator()
-			defer iterator.Release()
-
-			for iterator.Next() {
-				if err := bcsBatch.Put(iterator.Key(), iterator.Value()); err != nil {
-					return err
-				}
-			}
-
-			if err := iterator.Error(); err != nil {
-				return err
-			}
-
-			return atomic.WriteAll(userBatch, bcsBatch)
-		}(); err != nil {
+		if err := ks.migrateUserBCDB(previousUserBCDB, bcsBatch, userBatch); err != nil {
 			return err
 		}
 	}
@@ -171,6 +156,23 @@ func (ks *Keystore) initializeDB(manager manager.Manager) error {
 	}
 
 	return currentDB.Put(migratedKey, []byte(previousDB.Version.String()))
+}
+
+func (ks *Keystore) migrateUserBCDB(previousUserBCDB database.Database, bcsBatch database.Batch, userBatch database.Batch) error {
+	iterator := previousUserBCDB.NewIterator()
+	defer iterator.Release()
+
+	for iterator.Next() {
+		if err := bcsBatch.Put(iterator.Key(), iterator.Value()); err != nil {
+			return err
+		}
+	}
+
+	if err := iterator.Error(); err != nil {
+		return err
+	}
+
+	return atomic.WriteAll(userBatch, bcsBatch)
 }
 
 // CreateHandler returns a new service object that can send requests to thisAPI.

@@ -130,13 +130,13 @@ func (vm *VMClient) Initialize(
 
 	// Initialize and serve each database and construct the db manager
 	// initialize request parameters
-	semanticDBs := dbManager.GetDatabases()
-	semanticDBServers := make([]*vmproto.SemanticDBServer, len(semanticDBs))
-	for i, semDB := range semanticDBs {
+	versionedDBs := dbManager.GetDatabases()
+	versionedDBServers := make([]*vmproto.VersionedDBServer, len(versionedDBs))
+	for i, semDB := range versionedDBs {
 		dbBrokerID := vm.broker.NextId()
 		db := rpcdb.NewServer(semDB)
 		go vm.broker.AcceptAndServe(dbBrokerID, vm.startDBServerFunc(db))
-		semanticDBServers[i] = &vmproto.SemanticDBServer{
+		versionedDBServers[i] = &vmproto.VersionedDBServer{
 			DbServer: dbBrokerID,
 			Version:  semDB.Version.String(),
 		}
@@ -182,7 +182,7 @@ func (vm *VMClient) Initialize(
 		GenesisBytes:         genesisBytes,
 		UpgradeBytes:         upgradeBytes,
 		ConfigBytes:          configBytes,
-		DbServers:            semanticDBServers,
+		DbServers:            versionedDBServers,
 		EngineServer:         messengerBrokerID,
 		KeystoreServer:       keystoreBrokerID,
 		SharedMemoryServer:   sharedMemoryBrokerID,

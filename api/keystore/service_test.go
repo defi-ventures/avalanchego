@@ -433,14 +433,14 @@ func TestMigrateKeystoreUser(t *testing.T) {
 	password := "passwTest@fake01ord"
 	bID := ids.Empty
 	currentDB := memdb.New()
-	semanticDBs := []*manager.SemanticDatabase{
+	versionedDBs := []*manager.VersionedDatabase{
 		{
 			Database: currentDB,
 			Version:  version.NewDefaultVersion(1, 0, 0),
 		},
 	}
 
-	dbManager, err := manager.NewManagerFromDBs(semanticDBs)
+	dbManager, err := manager.NewManagerFromDBs(versionedDBs)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -468,11 +468,11 @@ func TestMigrateKeystoreUser(t *testing.T) {
 		t.Fatalf("Failed to put value in userDB: %s", err)
 	}
 
-	semanticDBs = append(semanticDBs, &manager.SemanticDatabase{
+	versionedDBs = append(versionedDBs, &manager.VersionedDatabase{
 		Database: memdb.New(),
 		Version:  version.NewDefaultVersion(1, 1, 0),
 	})
-	upgradedDBManager, err := manager.NewManagerFromDBs(semanticDBs)
+	upgradedDBManager, err := manager.NewManagerFromDBs(versionedDBs)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -516,11 +516,11 @@ func TestMigrateKeystoreUser(t *testing.T) {
 		t.Fatalf("Expected value: %s, but found %s", value, v2)
 	}
 
-	semanticDBs = append(semanticDBs, &manager.SemanticDatabase{
+	versionedDBs = append(versionedDBs, &manager.VersionedDatabase{
 		Database: memdb.New(),
 		Version:  version.NewDefaultVersion(2, 1, 0),
 	})
-	secondUpgradedDBManager, err := manager.NewManagerFromDBs(semanticDBs)
+	secondUpgradedDBManager, err := manager.NewManagerFromDBs(versionedDBs)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -2504,13 +2504,13 @@ func TestUptimeReporting(t *testing.T) {
 
 	// Test that the VM reports the correct uptimes for peers
 	// connected both during and after bootstrapping completes.
-	semanticDBs := []*manager.SemanticDatabase{
+	versionedDBs := []*manager.VersionedDatabase{
 		{
 			Database: memdb.New(),
 			Version:  version.NewDefaultVersion(1, 0, 0),
 		},
 	}
-	baseDBManager, err := manager.NewManagerFromDBs(semanticDBs)
+	baseDBManager, err := manager.NewManagerFromDBs(versionedDBs)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2610,12 +2610,12 @@ func TestUptimeReporting(t *testing.T) {
 		stakeMintingPeriod: defaultMaxStakingDuration,
 	}
 
-	semanticDBs = append(semanticDBs, &manager.SemanticDatabase{
+	versionedDBs = append(versionedDBs, &manager.VersionedDatabase{
 		Database: memdb.New(),
 		Version:  version.NewDefaultVersion(1, 0, 1),
 	})
 
-	newDBManager, err := manager.NewManagerFromDBs(semanticDBs)
+	newDBManager, err := manager.NewManagerFromDBs(versionedDBs)
 	if err != nil {
 		t.Fatal(err)
 	}

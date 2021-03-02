@@ -12,7 +12,7 @@ message InitializeRequest {
     bytes upgradeBytes = 8;
     bytes configBytes = 9;
     
-    repeated SemanticDBServer dbServers = 10;
+    repeated VersionedDBServer dbServers = 10;
     uint32 engineServer = 11;
     uint32 keystoreServer = 12;
     uint32 sharedMemoryServer = 13;
@@ -27,7 +27,7 @@ message InitializeResponse {
     bytes lastAcceptedID = 1;
 }
 
-message SemanticDBServer {
+message VersionedDBServer {
     uint32 dbServer = 1;
     string version = 2;
 }

@@ -80,6 +80,7 @@ var (
 	subnetsKey       = ids.ID{'s', 'u', 'b', 'n', 'e', 't', 's'}
 	currentSupplyKey = ids.ID{'c', 'u', 'r', 'r', 'e', 't', ' ', 's', 'u', 'p', 'p', 'l', 'y'}
 	migratedKey      = []byte("migrated")
+	noMigration      = []byte("no migration")
 
 	errRegisteringType          = errors.New("error registering type with database")
 	errInvalidLastAcceptedBlock = errors.New("last accepted block must be a decision block")
@@ -424,7 +425,7 @@ func (vm *VM) Bootstrapped() error {
 	stopIter := stopDB.NewIterator()
 	defer stopIter.Release()
 
-	previousDB, previousDBExists := vm.dbManager.Last()
+	previousDB, previousDBExists := vm.dbManager.Previous()
 	completedMigration, err := vm.DB.Has(migratedKey)
 	if err != nil {
 		return err
@@ -489,7 +490,7 @@ func (vm *VM) Bootstrapped() error {
 	if previousDBExists && !completedMigration {
 		errs.Add(vm.DB.Put(migratedKey, []byte(previousDB.Version.String())))
 	} else if !completedMigration {
-		errs.Add(vm.DB.Put(migratedKey, []byte("no migration")))
+		errs.Add(vm.DB.Put(migratedKey, noMigration))
 	}
 
 	errs.Add(

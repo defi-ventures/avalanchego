@@ -43,7 +43,7 @@ func TestNewSingleDB(t *testing.T) {
 	cmp := semDB.Compare(v1)
 	assert.Equal(t, 0, cmp, "incorrect version on current database")
 
-	_, exists := manager.Last()
+	_, exists := manager.Previous()
 	assert.False(t, exists, "there should be no previous database")
 
 	dbs := manager.GetDatabases()
@@ -67,7 +67,7 @@ func TestNewCreatesSingleDB(t *testing.T) {
 	cmp := semDB.Compare(v1)
 	assert.Equal(t, 0, cmp, "incorrect version on current database")
 
-	_, exists := manager.Last()
+	_, exists := manager.Previous()
 	assert.False(t, exists, "there should be no previous database")
 
 	dbs := manager.GetDatabases()
@@ -155,7 +155,7 @@ func TestNewSortsDatabases(t *testing.T) {
 	cmp := semDB.Compare(vers[0])
 	assert.Equal(t, 0, cmp, "incorrect version on current database")
 
-	prev, exists := manager.Last()
+	prev, exists := manager.Previous()
 	if !exists {
 		t.Fatal("expected to find a previous database")
 	}
@@ -192,7 +192,7 @@ func TestPrefixDBManager(t *testing.T) {
 	assert.NoError(t, db0.Close())
 	assert.NoError(t, db1.Close())
 
-	m := &manager{databases: []*SemanticDatabase{
+	m := &manager{databases: []*VersionedDatabase{
 		{
 			Database: db,
 			Version:  version.NewDefaultVersion(1, 0, 0),
@@ -230,7 +230,7 @@ func TestNestedPrefixDBManager(t *testing.T) {
 	assert.NoError(t, db0.Close())
 	assert.NoError(t, db1.Close())
 
-	m := &manager{databases: []*SemanticDatabase{
+	m := &manager{databases: []*VersionedDatabase{
 		{
 			Database: db,
 			Version:  version.NewDefaultVersion(1, 0, 0),
@@ -252,7 +252,7 @@ func TestNestedPrefixDBManager(t *testing.T) {
 func TestMeterDBManager(t *testing.T) {
 	registry := prometheus.NewRegistry()
 
-	m := &manager{databases: []*SemanticDatabase{
+	m := &manager{databases: []*VersionedDatabase{
 		{
 			Database: memdb.New(),
 			Version:  version.NewDefaultVersion(2, 0, 0),
@@ -269,7 +269,7 @@ func TestMeterDBManager(t *testing.T) {
 
 	// Create meterdb manager with fresh registry and confirm
 	// that there are no errors registering metrics for multiple
-	// semantic databases.
+	// versioned databases.
 	_, err := m.NewMeterDBManager("", registry)
 	assert.NoError(t, err)
 
@@ -284,7 +284,7 @@ func TestNewManagerFromDBs(t *testing.T) {
 		version.NewDefaultVersion(1, 2, 0),
 		version.NewDefaultVersion(1, 1, 1),
 	}
-	m, err := NewManagerFromDBs([]*SemanticDatabase{
+	m, err := NewManagerFromDBs([]*VersionedDatabase{
 		{
 			Database: memdb.New(),
 			Version:  versions[2],
@@ -309,7 +309,7 @@ func TestNewManagerFromDBs(t *testing.T) {
 }
 
 func TestNewManagerFromNonUniqueDBs(t *testing.T) {
-	_, err := NewManagerFromDBs([]*SemanticDatabase{
+	_, err := NewManagerFromDBs([]*VersionedDatabase{
 		{
 			Database: memdb.New(),
 			Version:  version.NewDefaultVersion(1, 1, 0),

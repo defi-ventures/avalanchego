@@ -30,38 +30,48 @@ var (
 
 type Manager interface {
 	// Current returns the database with the current database version
-	Current() *SemanticDatabase
-	// Last returns the last database prior to the current database or an error if none exists
-	Last() (*SemanticDatabase, bool)
+	Current() *VersionedDatabase
+	// Previous returns the database prior to the current database and true if a previous database exists.
+	Previous() (*VersionedDatabase, bool)
 	// GetDatabases returns all the managed databases in order from current to the oldest version
-	GetDatabases() []*SemanticDatabase
+	GetDatabases() []*VersionedDatabase
 	// Close closes all of the databases
 	Close() error
 
-	NewPrefixDBManager([]byte) Manager
-	NewNestedPrefixDBManager([]byte) Manager
-	NewMeterDBManager(string, prometheus.Registerer) (Manager, error)
+	// NewPrefixDBManager returns a new database manager with each of its databases
+	// prefixed with [prefix]
+	NewPrefixDBManager(prefix []byte) Manager
+	// NewNestedPrefixDBManager returns a new database manager where each of its databases
+	// has the nested prefix [prefix] applied to it.
+	NewNestedPrefixDBManager(prefix []byte) Manager
+	// NewMeterDBManager returns a new database manager with each of its databases
+	// wrapped with a meterdb instance to support metrics on database performance.
+	NewMeterDBManager(namespace string, registerer prometheus.Registerer) (Manager, error)
 }
 
 type manager struct {
-	databases []*SemanticDatabase
+	databases []*VersionedDatabase
 }
 
-func (m *manager) Current() *SemanticDatabase { return m.databases[0] }
+func (m *manager) Current() *VersionedDatabase { return m.databases[0] }
 
-func (m *manager) Last() (*SemanticDatabase, bool) {
+func (m *manager) Previous() (*VersionedDatabase, bool) {
 	if len(m.databases) < 2 {
 		return nil, false
 	}
 	return m.databases[1], true
 }
 
-func (m *manager) GetDatabases() []*SemanticDatabase { return m.databases }
+func (m *manager) GetDatabases() []*VersionedDatabase { return m.databases }
 
 func (m *manager) Close() error {
+	return closeDBs(m.databases)
+}
+
+func closeDBs(dbs []*VersionedDatabase) error {
 	errs := wrappers.Errs{}
 
-	for _, db := range m.databases {
+	for _, db := range dbs {
 		errs.Add(db.Close())
 	}
 
@@ -72,14 +82,18 @@ func (m *manager) Close() error {
 // the [wrap] function. If an error is returned by wrap, the error is returned
 // immediately. If [wrap] never returns an error, then wrapManager is guaranteed to
 // never return an error.
-func (m *manager) wrapManager(wrap func(db *SemanticDatabase) (*SemanticDatabase, error)) (*manager, error) {
-	databases := make([]*SemanticDatabase, len(m.databases))
-	for i, db := range m.databases {
+// the function wrap must return a database that can be closed without closing the
+// underlying database.
+func (m *manager) wrapManager(wrap func(db *VersionedDatabase) (*VersionedDatabase, error)) (*manager, error) {
+	databases := make([]*VersionedDatabase, 0, len(m.databases))
+	for _, db := range m.databases {
 		wrappedDB, err := wrap(db)
 		if err != nil {
+			// ignore additional errors in favor of returning the original error
+			_ = closeDBs(databases)
 			return nil, err
 		}
-		databases[i] = wrappedDB
+		databases = append(databases, wrappedDB)
 	}
 	return &manager{databases: databases}, nil
 }
@@ -88,7 +102,7 @@ func (m *manager) wrapManager(wrap func(db *SemanticDatabase) (*SemanticDatabase
 // with a default version of v1.0.0
 func NewDefaultMemDBManager() Manager {
 	return &manager{
-		databases: []*SemanticDatabase{
+		databases: []*VersionedDatabase{
 			{
 				Database: memdb.New(),
 				Version:  version.NewDefaultVersion(1, 0, 0),
@@ -98,7 +112,7 @@ func NewDefaultMemDBManager() Manager {
 }
 
 // New creates a database manager at [filePath] by creating a database instance from each directory
-// and is less than or equal to the specified version
+// with a version <= [currentVersion]
 func New(dbDirPath string, currentVersion version.Version) (Manager, error) {
 	parser := version.NewDefaultParser()
 
@@ -108,10 +122,11 @@ func New(dbDirPath string, currentVersion version.Version) (Manager, error) {
 		return nil, fmt.Errorf("couldn't create db at %s: %w", currentDBPath, err)
 	}
 
-	semDBs := make([]*SemanticDatabase, 1)
-	semDBs[0] = &SemanticDatabase{
-		Database: currentDB,
-		Version:  currentVersion,
+	semDBs := []*VersionedDatabase{
+		{
+			Database: currentDB,
+			Version:  currentVersion,
+		},
 	}
 	err = filepath.Walk(dbDirPath, func(path string, info os.FileInfo, err error) error {
 		// Skip the root directory
@@ -141,7 +156,7 @@ func New(dbDirPath string, currentVersion version.Version) (Manager, error) {
 			return fmt.Errorf("couldn't create db at %s: %w", path, err)
 		}
 
-		semDBs = append(semDBs, &SemanticDatabase{
+		semDBs = append(semDBs, &VersionedDatabase{
 			Database: db,
 			Version:  version,
 		})
@@ -168,8 +183,8 @@ func New(dbDirPath string, currentVersion version.Version) (Manager, error) {
 // NewPrefixDBManager creates a new manager with each database instance prefixed
 // by [prefix]
 func (m *manager) NewPrefixDBManager(prefix []byte) Manager {
-	m, _ = m.wrapManager(func(sdb *SemanticDatabase) (*SemanticDatabase, error) {
-		return &SemanticDatabase{
+	m, _ = m.wrapManager(func(sdb *VersionedDatabase) (*VersionedDatabase, error) {
+		return &VersionedDatabase{
 			Database: prefixdb.New(prefix, sdb.Database),
 			Version:  sdb.Version,
 		}, nil
@@ -180,8 +195,8 @@ func (m *manager) NewPrefixDBManager(prefix []byte) Manager {
 // NewNestedPrefixDBManager creates a new manager with each database instance
 // wrapped with a nested prfix of [prefix]
 func (m *manager) NewNestedPrefixDBManager(prefix []byte) Manager {
-	m, _ = m.wrapManager(func(sdb *SemanticDatabase) (*SemanticDatabase, error) {
-		return &SemanticDatabase{
+	m, _ = m.wrapManager(func(sdb *VersionedDatabase) (*VersionedDatabase, error) {
+		return &VersionedDatabase{
 			Database: prefixdb.NewNested(prefix, sdb.Database),
 			Version:  sdb.Version,
 		}, nil
@@ -191,15 +206,14 @@ func (m *manager) NewNestedPrefixDBManager(prefix []byte) Manager {
 
 // NewMeterDBManager wraps each database instance with a meterdb instance. The namespace
 // is concatenated with the version of the database. Note: calling this more than once
-// with the same [namespace] more than once will cause a conflict for the [registerer]
-// and produce an error.
+// with the same [namespace] will cause a conflict error for the [registerer]
 func (m *manager) NewMeterDBManager(namespace string, registerer prometheus.Registerer) (Manager, error) {
-	return m.wrapManager(func(sdb *SemanticDatabase) (*SemanticDatabase, error) {
+	return m.wrapManager(func(sdb *VersionedDatabase) (*VersionedDatabase, error) {
 		mdb, err := meterdb.New(fmt.Sprintf("%s_%s", namespace, strings.ReplaceAll(sdb.Version.String(), ".", "_")), registerer, sdb.Database)
 		if err != nil {
 			return nil, err
 		}
-		return &SemanticDatabase{
+		return &VersionedDatabase{
 			Database: mdb,
 			Version:  sdb.Version,
 		}, nil
@@ -207,9 +221,9 @@ func (m *manager) NewMeterDBManager(namespace string, registerer prometheus.Regi
 }
 
 // NewManagerFromDBs
-func NewManagerFromDBs(dbs []*SemanticDatabase) (Manager, error) {
+func NewManagerFromDBs(dbs []*VersionedDatabase) (Manager, error) {
 	SortDescending(dbs)
-	sortedAndUnique := utils.IsSortedAndUnique(innerSortDescendingSemanticDBs(dbs))
+	sortedAndUnique := utils.IsSortedAndUnique(innerSortDescendingVersionedDBs(dbs))
 	if !sortedAndUnique {
 		return nil, errNonSortedAndUniqueDBs
 	}
@@ -218,21 +232,21 @@ func NewManagerFromDBs(dbs []*SemanticDatabase) (Manager, error) {
 	}, nil
 }
 
-type SemanticDatabase struct {
+type VersionedDatabase struct {
 	database.Database
 
 	version.Version
 }
 
-type innerSortDescendingSemanticDBs []*SemanticDatabase
+type innerSortDescendingVersionedDBs []*VersionedDatabase
 
 // Less returns true if the version at index i is greater than the version at index j
 // such that it will sort in descending order
-func (dbs innerSortDescendingSemanticDBs) Less(i, j int) bool {
+func (dbs innerSortDescendingVersionedDBs) Less(i, j int) bool {
 	return dbs[i].Version.Compare(dbs[j].Version) > 0
 }
 
-func (dbs innerSortDescendingSemanticDBs) Len() int      { return len(dbs) }
-func (dbs innerSortDescendingSemanticDBs) Swap(i, j int) { dbs[j], dbs[i] = dbs[i], dbs[j] }
+func (dbs innerSortDescendingVersionedDBs) Len() int      { return len(dbs) }
+func (dbs innerSortDescendingVersionedDBs) Swap(i, j int) { dbs[j], dbs[i] = dbs[i], dbs[j] }
 
-func SortDescending(dbs []*SemanticDatabase) { sort.Sort(innerSortDescendingSemanticDBs(dbs)) }
+func SortDescending(dbs []*VersionedDatabase) { sort.Sort(innerSortDescendingVersionedDBs(dbs)) }

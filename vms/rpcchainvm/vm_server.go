@@ -87,7 +87,7 @@ func (vm *VMServer) Initialize(_ context.Context, req *vmproto.InitializeRequest
 	}
 
 	// Dial each database in the request and construct the database manager
-	semanticDBs := make([]*manager.SemanticDatabase, len(req.DbServers))
+	versionedDBs := make([]*manager.VersionedDatabase, len(req.DbServers))
 	versionParser := version.NewDefaultParser()
 	for i, semDBReq := range req.DbServers {
 		version, err := versionParser.Parse(semDBReq.Version)
@@ -105,12 +105,12 @@ func (vm *VMServer) Initialize(_ context.Context, req *vmproto.InitializeRequest
 		}
 		vm.connCloser.Add(dbConn)
 
-		semanticDBs[i] = &manager.SemanticDatabase{
+		versionedDBs[i] = &manager.VersionedDatabase{
 			Database: rpcdb.NewClient(rpcdbproto.NewDatabaseClient(dbConn)),
 			Version:  version,
 		}
 	}
-	dbManager, err := manager.NewManagerFromDBs(semanticDBs)
+	dbManager, err := manager.NewManagerFromDBs(versionedDBs)
 	if err != nil {
 		// Ignore closing errors to return the original error
 		_ = vm.connCloser.Close()
