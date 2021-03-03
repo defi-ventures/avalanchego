@@ -1,6 +1,8 @@
 syntax = "proto3";
 package vmproto;
 
+// To compile: protoc --go_out=plugins=grpc:. vm.proto
+
 message InitializeRequest {
     uint32 networkID = 1;
     bytes subnetID = 2;
