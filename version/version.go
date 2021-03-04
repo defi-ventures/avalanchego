@@ -15,6 +15,7 @@ const (
 
 var (
 	errDifferentMajor = errors.New("different major version")
+	DefaultVersion1   = NewDefaultVersion(1, 0, 0)
 )
 
 type Version interface {
@@ -57,6 +58,7 @@ func (v *version) Major() int     { return v.major }
 func (v *version) Minor() int     { return v.minor }
 func (v *version) Patch() int     { return v.patch }
 
+// Compare returns a positive number if v > o, 0 if v == o, or a negative number if v < 0.
 func (v *version) Compare(o Version) int {
 	{
 		vm := v.Major()

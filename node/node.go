@@ -369,7 +369,7 @@ func (n *Node) Dispatch() error {
  */
 
 func (n *Node) initDatabase() error {
-	n.DBManager = n.Config.DB
+	n.DBManager = n.Config.DBManager
 	n.DB = n.DBManager.Current()
 
 	rawExpectedGenesisHash := hashing.ComputeHash256(n.Config.GenesisBytes)

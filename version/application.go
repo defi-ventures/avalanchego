@@ -16,7 +16,8 @@ var (
 	errDifferentApps = errors.New("different applications")
 )
 
-// Application defines what is needed to describe a version
+// Application defines what is needed to describe a versioned
+// Application.
 type Application interface {
 	Version
 

@@ -340,9 +340,9 @@ func setNodeConfig(v *viper.Viper) error {
 		if err != nil {
 			return fmt.Errorf("couldn't create db manager at %s: %w", dbPath, err)
 		}
-		Config.DB = dbManager
+		Config.DBManager = dbManager
 	} else {
-		dbManager, err := manager.NewManagerFromDBs([]*manager.VersionedDatabase{
+		Config.DBManager, err = manager.NewManagerFromDBs([]*manager.VersionedDatabase{
 			{
 				Database: memdb.New(),
 				Version:  dbVersion,
@@ -351,7 +351,6 @@ func setNodeConfig(v *viper.Viper) error {
 		if err != nil {
 			return fmt.Errorf("couldn't create db manager from memory db: %w", err)
 		}
-		Config.DB = dbManager
 	}
 
 	// IP Configuration

@@ -21,7 +21,7 @@ import (
 func TestNewSingleDB(t *testing.T) {
 	dir := t.TempDir()
 
-	v1 := version.NewDefaultVersion(1, 0, 0)
+	v1 := version.DefaultVersion1
 
 	dbPath := path.Join(dir, v1.String())
 	db, err := leveldb.New(dbPath, 0, 0, 0)
@@ -56,7 +56,7 @@ func TestNewSingleDB(t *testing.T) {
 func TestNewCreatesSingleDB(t *testing.T) {
 	dir := t.TempDir()
 
-	v1 := version.NewDefaultVersion(1, 0, 0)
+	v1 := version.DefaultVersion1
 
 	manager, err := New(dir, v1)
 	if err != nil {
@@ -195,7 +195,7 @@ func TestPrefixDBManager(t *testing.T) {
 	m := &manager{databases: []*VersionedDatabase{
 		{
 			Database: db,
-			Version:  version.NewDefaultVersion(1, 0, 0),
+			Version:  version.DefaultVersion1,
 		},
 	}}
 
@@ -233,7 +233,7 @@ func TestNestedPrefixDBManager(t *testing.T) {
 	m := &manager{databases: []*VersionedDatabase{
 		{
 			Database: db,
-			Version:  version.NewDefaultVersion(1, 0, 0),
+			Version:  version.DefaultVersion1,
 		},
 	}}
 
@@ -263,7 +263,7 @@ func TestMeterDBManager(t *testing.T) {
 		},
 		{
 			Database: memdb.New(),
-			Version:  version.NewDefaultVersion(1, 0, 0),
+			Version:  version.DefaultVersion1,
 		},
 	}}
 

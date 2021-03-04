@@ -50,6 +50,9 @@ type Manager interface {
 }
 
 type manager struct {
+	// databases with the current version at index 0 and prior versions in
+	// descending order
+	// invariant: len(databases) > 0
 	databases []*VersionedDatabase
 }
 
@@ -105,7 +108,7 @@ func NewDefaultMemDBManager() Manager {
 		databases: []*VersionedDatabase{
 			{
 				Database: memdb.New(),
-				Version:  version.NewDefaultVersion(1, 0, 0),
+				Version:  version.DefaultVersion1,
 			},
 		},
 	}
@@ -122,13 +125,19 @@ func New(dbDirPath string, currentVersion version.Version) (Manager, error) {
 		return nil, fmt.Errorf("couldn't create db at %s: %w", currentDBPath, err)
 	}
 
-	semDBs := []*VersionedDatabase{
+	versionedDBs := []*VersionedDatabase{
 		{
 			Database: currentDB,
 			Version:  currentVersion,
 		},
 	}
 	err = filepath.Walk(dbDirPath, func(path string, info os.FileInfo, err error) error {
+		// the walkFn is called with a non-nil error argument if an os.Lstat
+		// or Readdirnames call returns an error. Both cases are considered
+		// fatal in the traversal.
+		if err != nil {
+			return err
+		}
 		// Skip the root directory
 		if path == dbDirPath {
 			return nil
@@ -156,7 +165,7 @@ func New(dbDirPath string, currentVersion version.Version) (Manager, error) {
 			return fmt.Errorf("couldn't create db at %s: %w", path, err)
 		}
 
-		semDBs = append(semDBs, &VersionedDatabase{
+		versionedDBs = append(versionedDBs, &VersionedDatabase{
 			Database: db,
 			Version:  version,
 		})
@@ -164,14 +173,13 @@ func New(dbDirPath string, currentVersion version.Version) (Manager, error) {
 		return filepath.SkipDir
 	})
 
-	SortDescending(semDBs)
-
+	SortDescending(versionedDBs)
 	m := &manager{
-		databases: semDBs,
+		databases: versionedDBs,
 	}
 
-	// If an error occurred, close all of the opened databases
-	// and return the original error
+	// If an error occurred walking [dbDirPath] close the
+	// database manager and return the original error here.
 	if err != nil {
 		_ = m.Close()
 		return nil, err
@@ -183,10 +191,10 @@ func New(dbDirPath string, currentVersion version.Version) (Manager, error) {
 // NewPrefixDBManager creates a new manager with each database instance prefixed
 // by [prefix]
 func (m *manager) NewPrefixDBManager(prefix []byte) Manager {
-	m, _ = m.wrapManager(func(sdb *VersionedDatabase) (*VersionedDatabase, error) {
+	m, _ = m.wrapManager(func(vdb *VersionedDatabase) (*VersionedDatabase, error) {
 		return &VersionedDatabase{
-			Database: prefixdb.New(prefix, sdb.Database),
-			Version:  sdb.Version,
+			Database: prefixdb.New(prefix, vdb.Database),
+			Version:  vdb.Version,
 		}, nil
 	})
 	return m
@@ -195,10 +203,10 @@ func (m *manager) NewPrefixDBManager(prefix []byte) Manager {
 // NewNestedPrefixDBManager creates a new manager with each database instance
 // wrapped with a nested prfix of [prefix]
 func (m *manager) NewNestedPrefixDBManager(prefix []byte) Manager {
-	m, _ = m.wrapManager(func(sdb *VersionedDatabase) (*VersionedDatabase, error) {
+	m, _ = m.wrapManager(func(vdb *VersionedDatabase) (*VersionedDatabase, error) {
 		return &VersionedDatabase{
-			Database: prefixdb.NewNested(prefix, sdb.Database),
-			Version:  sdb.Version,
+			Database: prefixdb.NewNested(prefix, vdb.Database),
+			Version:  vdb.Version,
 		}, nil
 	})
 	return m
@@ -208,14 +216,14 @@ func (m *manager) NewNestedPrefixDBManager(prefix []byte) Manager {
 // is concatenated with the version of the database. Note: calling this more than once
 // with the same [namespace] will cause a conflict error for the [registerer]
 func (m *manager) NewMeterDBManager(namespace string, registerer prometheus.Registerer) (Manager, error) {
-	return m.wrapManager(func(sdb *VersionedDatabase) (*VersionedDatabase, error) {
-		mdb, err := meterdb.New(fmt.Sprintf("%s_%s", namespace, strings.ReplaceAll(sdb.Version.String(), ".", "_")), registerer, sdb.Database)
+	return m.wrapManager(func(vdb *VersionedDatabase) (*VersionedDatabase, error) {
+		mdb, err := meterdb.New(fmt.Sprintf("%s_%s", namespace, strings.ReplaceAll(vdb.Version.String(), ".", "_")), registerer, vdb.Database)
 		if err != nil {
 			return nil, err
 		}
 		return &VersionedDatabase{
 			Database: mdb,
-			Version:  sdb.Version,
+			Version:  vdb.Version,
 		}, nil
 	})
 }
@@ -234,14 +242,13 @@ func NewManagerFromDBs(dbs []*VersionedDatabase) (Manager, error) {
 
 type VersionedDatabase struct {
 	database.Database
-
 	version.Version
 }
 
 type innerSortDescendingVersionedDBs []*VersionedDatabase
 
 // Less returns true if the version at index i is greater than the version at index j
-// such that it will sort in descending order
+// such that it will sort in descending order (newest version --> oldest version)
 func (dbs innerSortDescendingVersionedDBs) Less(i, j int) bool {
 	return dbs[i].Version.Compare(dbs[j].Version) > 0
 }

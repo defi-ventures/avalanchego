@@ -89,15 +89,15 @@ func (vm *VMServer) Initialize(_ context.Context, req *vmproto.InitializeRequest
 	// Dial each database in the request and construct the database manager
 	versionedDBs := make([]*manager.VersionedDatabase, len(req.DbServers))
 	versionParser := version.NewDefaultParser()
-	for i, semDBReq := range req.DbServers {
-		version, err := versionParser.Parse(semDBReq.Version)
+	for i, vDBReq := range req.DbServers {
+		version, err := versionParser.Parse(vDBReq.Version)
 		if err != nil {
 			// Ignore closing errors to return the original error
 			_ = vm.connCloser.Close()
 			return nil, err
 		}
 
-		dbConn, err := vm.broker.Dial(semDBReq.DbServer)
+		dbConn, err := vm.broker.Dial(vDBReq.DbServer)
 		if err != nil {
 			// Ignore closing errors to return the original error
 			_ = vm.connCloser.Close()

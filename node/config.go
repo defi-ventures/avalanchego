@@ -44,7 +44,7 @@ type Config struct {
 	EnableCrypto bool
 
 	// Database to use for the node
-	DB manager.Manager
+	DBManager manager.Manager
 
 	// Staking configuration
 	StakingIP             utils.DynamicIPDesc
