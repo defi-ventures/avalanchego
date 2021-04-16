@@ -20,6 +20,7 @@ const (
 	DenaliID  uint32 = 3
 	EverestID uint32 = 4
 	FujiID    uint32 = 5
+	TokenizerID uint32 = 6
 
 	TestnetID  uint32 = FujiID
 	UnitTestID uint32 = 10
@@ -33,6 +34,7 @@ const (
 	TestnetName  = "testnet"
 	UnitTestName = "testing"
 	LocalName    = "local"
+	TokenizerName = "tokenizer"
 
 	MainnetHRP  = "avax"
 	CascadeHRP  = "cascade"
@@ -42,6 +44,7 @@ const (
 	UnitTestHRP = "testing"
 	LocalHRP    = "local"
 	FallbackHRP = "custom"
+	TokenizerHRP = "tokenizer"
 )
 
 // Variables to be exported
@@ -57,6 +60,7 @@ var (
 		FujiID:     FujiName,
 		UnitTestID: UnitTestName,
 		LocalID:    LocalName,
+		TokenizerID: TokenizerName,
 	}
 	NetworkNameToNetworkID = map[string]uint32{
 		MainnetName:  MainnetID,
@@ -67,6 +71,7 @@ var (
 		TestnetName:  TestnetID,
 		UnitTestName: UnitTestID,
 		LocalName:    LocalID,
+		TokenizerName: TokenizerID,
 	}
 
 	NetworkIDToHRP = map[uint32]string{
@@ -77,6 +82,7 @@ var (
 		FujiID:     FujiHRP,
 		UnitTestID: UnitTestHRP,
 		LocalID:    LocalHRP,
+		TokenizerID: TokenizerHRP,
 	}
 	NetworkHRPToNetworkID = map[string]uint32{
 		MainnetHRP:  MainnetID,
@@ -86,6 +92,7 @@ var (
 		FujiHRP:     FujiID,
 		UnitTestHRP: UnitTestID,
 		LocalHRP:    LocalID,
+		TokenizerHRP: TokenizerID,
 	}
 
 	ValidNetworkName = regexp.MustCompile(`network-[0-9]+`)
