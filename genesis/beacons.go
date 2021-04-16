@@ -61,6 +61,12 @@ func getIPs(networkID uint32) []string {
 			"3.12.197.248:21001",
 			"3.17.39.236:21001",
 		}
+	case constants.TokenizerID:
+		return []string{
+			"18.208.14.162:22222",
+			"34.232.22.101:22222",
+			"3.213.82.225:22222"
+		}
 	default:
 		return nil
 	}

@@ -51,6 +51,8 @@ func GetParams(networkID uint32) *Params {
 		return &MainnetParams
 	case constants.FujiID:
 		return &FujiParams
+	case constants.TokenizerID:
+		return &TokenizerParams
 	case constants.LocalID:
 		return &LocalParams
 	default:

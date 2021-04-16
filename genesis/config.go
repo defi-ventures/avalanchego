@@ -159,17 +159,21 @@ var (
 	// LocalConfig is the config that should be used to generate a local
 	// genesis.
 	LocalConfig Config
+
+	TokenizerConfig Config
 )
 
 func init() {
 	unparsedMainnetConfig := UnparsedConfig{}
 	unparsedFujiConfig := UnparsedConfig{}
+	unparsedTokenizerConfig := UnparsedConfig{}
 	unparsedLocalConfig := UnparsedConfig{}
 
 	errs := wrappers.Errs{}
 	errs.Add(
 		json.Unmarshal([]byte(mainnetGenesisConfigJSON), &unparsedMainnetConfig),
 		json.Unmarshal([]byte(fujiGenesisConfigJSON), &unparsedFujiConfig),
+		json.Unmarshal([]byte(TokenizerGenesisConfigJSON), &unparsedTokenizerConfig),
 		json.Unmarshal([]byte(localGenesisConfigJSON), &unparsedLocalConfig),
 	)
 	if errs.Errored() {
@@ -183,6 +187,10 @@ func init() {
 	fujiConfig, err := unparsedFujiConfig.Parse()
 	errs.Add(err)
 	FujiConfig = fujiConfig
+
+	tokenizerConfig, err := unparsedTokenizerConfig.Parse()
+	errs.Add(err)
+	TokenizerConfig = tokenizerConfig
 
 	localConfig, err := unparsedLocalConfig.Parse()
 	errs.Add(err)
@@ -200,6 +208,8 @@ func GetConfig(networkID uint32) *Config {
 		return &MainnetConfig
 	case constants.FujiID:
 		return &FujiConfig
+	case constants.TokenizerID:
+		return &TokenizerConfig
 	case constants.LocalID:
 		return &LocalConfig
 	default:

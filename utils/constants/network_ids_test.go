@@ -25,6 +25,10 @@ func TestGetHRP(t *testing.T) {
 			hrp: FujiHRP,
 		},
 		{
+			id:  TokenizerID,
+			hrp: TokenizerHRP,
+		},
+		{
 			id:  LocalID,
 			hrp: LocalHRP,
 		},
@@ -59,6 +63,10 @@ func TestNetworkName(t *testing.T) {
 		{
 			id:   FujiID,
 			name: FujiName,
+		},
+		{
+			id:   TokenizerID,
+			name: TokenizerName,
 		},
 		{
 			id:   LocalID,
@@ -100,6 +108,10 @@ func TestNetworkID(t *testing.T) {
 		{
 			name: FujiName,
 			id:   FujiID,
+		},
+		{
+			name: TokenizerName,
+			id:   TokenizerID,
 		},
 		{
 			name: LocalName,
