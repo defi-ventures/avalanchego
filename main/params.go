@@ -155,7 +155,7 @@ func avalancheFlagSet() *flag.FlagSet {
 	fs.Duration(consensusShutdownTimeoutKey, 5*time.Second, "Timeout before killing an unresponsive chain.")
 
 	// HTTP API
-	fs.String(httpHostKey, "0.0.0.0", "Address of the HTTP server")
+	fs.String(httpHostKey, "127.0.0.1", "Address of the HTTP server")
 	fs.Uint(httpPortKey, 22222, "Port of the HTTP server")
 	fs.Bool(httpsEnabledKey, false, "Upgrade the HTTP server to HTTPs")
 	fs.String(httpsKeyFileKey, "", "TLS private key file for the HTTPs server")
