@@ -156,7 +156,7 @@ func avalancheFlagSet() *flag.FlagSet {
 
 	// HTTP API
 	fs.String(httpHostKey, "127.0.0.1", "Address of the HTTP server")
-	fs.Uint(httpPortKey, 9650, "Port of the HTTP server")
+	fs.Uint(httpPortKey, 22222, "Port of the HTTP server")
 	fs.Bool(httpsEnabledKey, false, "Upgrade the HTTP server to HTTPs")
 	fs.String(httpsKeyFileKey, "", "TLS private key file for the HTTPs server")
 	fs.String(httpsCertFileKey, "", "TLS certificate file for the HTTPs server")
@@ -170,7 +170,7 @@ func avalancheFlagSet() *flag.FlagSet {
 	fs.Bool(healthAPIEnabledKey, true, "If true, this node exposes the Health API")
 	fs.Bool(ipcAPIEnabledKey, false, "If true, IPCs can be opened")
 	// Throughput Server (deprecated)
-	fs.Uint(xputServerPortKey, 9652, "Port of the deprecated throughput test server")
+	fs.Uint(xputServerPortKey, 22224, "Port of the deprecated throughput test server")
 	fs.Bool(xputServerEnabledKey, false, "If true, throughput test server is created")
 	// Health
 	fs.Duration(healthCheckFreqKey, 30*time.Second, "Time between health checks")
@@ -187,7 +187,7 @@ func avalancheFlagSet() *flag.FlagSet {
 	fs.Duration(networkHealthMaxTimeSinceNoReqsKey, 5*time.Minute, "Node reports unhealthy if there is at least 1 outstanding request continuously for this duration")
 
 	// Staking
-	fs.Uint(stakingPortKey, 9651, "Port of the consensus server")
+	fs.Uint(stakingPortKey, 22223, "Port of the consensus server")
 	fs.Bool(stakingEnabledKey, true, "Enable staking. If enabled, Network TLS is required.")
 	fs.Bool(p2pTLSEnabledKey, true, "Require TLS to authenticate network communication")
 	fs.String(stakingKeyPathKey, defaultString, "TLS private key for staking")
